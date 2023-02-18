@@ -1,6 +1,7 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
 const { swagLabCredential } = require("./utils/credential");
+const { login } = require("./utils/helper");
 
 test("login with standard user", async ({ page }) => {
     await page.goto(swagLabCredential.url);
@@ -29,5 +30,41 @@ test("login with locked out user", async ({ page }) => {
     await page.locator("input#login-button").click();
     await expect(page.locator('h3[data-test="error"]')).toHaveText(
         /this user has been locked out/
+    );
+});
+
+test("buy a product from store", async ({ page }) => {
+    await login(
+        page,
+        expect,
+        swagLabCredential.standardUserName,
+        swagLabCredential.password
+    );
+
+    await page
+        .getByText(/add to cart/i)
+        .nth(0)
+        .click();
+    await expect(
+        page.locator('button[name="remove-sauce-labs-backpack"]')
+    ).toBeVisible();
+    expect(page.locator("span.shopping_cart_badge").isVisible).toBeTruthy();
+
+    await page.locator("a.shopping_cart_link").click();
+    await expect(page).toHaveURL(/.*\/cart\.html/);
+
+    await page.locator('button[data-test="checkout"]').click();
+    await expect(page).toHaveURL(/.*\/checkout-step-one\.html/);
+
+    await page.locator('input[data-test="firstName"]').fill("abc");
+    await page.locator('input[data-test="lastName"]').fill("123");
+    await page.locator('input[data-test="postalCode"]').fill("560066");
+    await page.locator('input[data-test="continue"]').click();
+    await expect(page).toHaveURL(/.*\/checkout-step-two\.html/);
+
+    await page.locator('button[data-test="finish"]').click();
+    await expect(page).toHaveURL(/.*\/checkout-complete\.html/);
+    await expect(page.locator("h2.complete-header")).toHaveText(
+        /thank you for your order/i
     );
 });
