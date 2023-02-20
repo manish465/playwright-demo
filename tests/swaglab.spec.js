@@ -1,4 +1,3 @@
-// @ts-check
 const { test, expect } = require("@playwright/test");
 const { swagLabCredential } = require("./utils/credential");
 const { login } = require("./utils/helper");
@@ -66,5 +65,29 @@ test("buy a product from store", async ({ page }) => {
     await expect(page).toHaveURL(/.*\/checkout-complete\.html/);
     await expect(page.locator("h2.complete-header")).toHaveText(
         /thank you for your order/i
+    );
+});
+
+test("goto about page", async ({ page }) => {
+    await login(
+        page,
+        expect,
+        swagLabCredential.standardUserName,
+        swagLabCredential.password
+    );
+
+    await page.locator("button#react-burger-menu-btn").click();
+    await expect(page.locator("nav.bm-item-list")).toBeVisible();
+
+    await page.locator("a#about_sidebar_link").click();
+    await expect(page).toHaveURL(/.*\/saucelabs\.com/);
+});
+
+test("change product sorting order", async ({ page }) => {
+    await login(
+        page,
+        expect,
+        swagLabCredential.standardUserName,
+        swagLabCredential.password
     );
 });
